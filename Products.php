@@ -29,9 +29,9 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
+          <li class="nav-item"><a class="nav-link active" href="Products.php">Products</a></li>
           <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
-          <li class="nav-item"><a class="nav-link active" href="Contact.php">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
           <li class="nav-item"><a class="nav-link" href="Cart.php">🛒 Cart</a></li>
           <li class="nav-item">
             <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
@@ -148,63 +148,11 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form id="registerForm">
-            <div class="mb-3"> 
-                <label for="firstName" class="form-label">First Name</label>
-                <input type="text" class="form-control" id="firstName" name="firstName" required> 
-            </div>
-            <div class="mb-3"> 
-                <label for="lastName" class="form-label">Last Name</label>
-                <input type="text" class="form-control" id="lastName" name="lastName" required> 
-            </div>
-            <div class="mb-3">
-              <label for="registerEmail" class="form-label">Email address</label>
-              <input type="email" class="form-control" id="registerEmail" name="registerEmail" required> 
-            </div>
-            <div class="mb-3">
-              <label for="homeAddress" class="form-label">Home Address</label>
-              <textarea class="form-control" id="homeAddress" name="homeAddress" rows="3" required></textarea> 
-            </div>
-            <div class="mb-3">
-              <label for="registerContact" class="form-label">Contact Number</label>
-              <input 
-                type="tel" 
-                class="form-control" 
-                id="registerContact" 
-                name="registerContact"
-                required
-                > 
-            </div>
-            <div class="mb-3">
-              <label for="registerPassword" class="form-label">Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="registerPassword" name="registerPassword" required> 
-                <button class="btn btn-outline-secondary" type="button" id="toggleRegisterPassword">
-                  <i class="fas fa-eye" id="registerPasswordIcon"></i>
-                </button>
-              </div>
-            </div>
-           
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirm Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required> 
-                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                  <i class="fas fa-eye" id="confirmPasswordIcon"></i>
-                </button>
-              </div>
-            </div>
-           
-            <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" id="agreeTerms" name="agreeTerms" required> 
-              <label class="form-check-label" for="agreeTerms">
-                I agree to the <a href="#" class="text-decoration-none">Terms and Conditions</a>
-              </label>
-            </div>
-            <div class="d-grid">
-              <button type="submit" class="btn btn-primary">Sign Up</button>
-            </div>
-          </form>
+          
+        <?php 
+            include 'signup_form.php'; 
+        ?>
+
         </div>
         <div class="modal-footer justify-content-center">
           <p class="mb-0">Already have an account? <a href="#" class="text-decoration-none" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a></p>
@@ -537,6 +485,6 @@
     });
     </script>
     
-
+<script src="path/to/signup_ajax.js"></script>
 </body>
 </html>
