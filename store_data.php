@@ -11,16 +11,31 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+
+
 // 2. Get ALL data from AJAX POST request
-$first_name = filter_input(INPUT_POST, 'first_name', FILTER_SANITIZE_STRING);
-$last_name = filter_input(INPUT_POST, 'last_name', FILTER_SANITIZE_STRING);
+$firstName = filter_input(INPUT_POST, 'firstName', FILTER_SANITIZE_STRING);
+$lastName = filter_input(INPUT_POST, 'lastName', FILTER_SANITIZE_STRING);
 $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-$home_address = filter_input(INPUT_POST, 'home_address', FILTER_SANITIZE_STRING);
-$contact_number = filter_input(INPUT_POST, 'contact_number', FILTER_SANITIZE_STRING);
-$plain_password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
+$homeAddress = filter_input(INPUT_POST, 'homeAddress', FILTER_SANITIZE_STRING);
+$registerContact = filter_input(INPUT_POST, 'registerContact', FILTER_SANITIZE_STRING);
+$plainPassword = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
 
 // 3. **SECURITY CRITICAL:** Hash the password
-$hashed_password = password_hash($plain_password, PASSWORD_DEFAULT);
+$hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+if (
+    empty($_POST['firstName']) ||
+    empty($_POST['lastName']) ||
+    !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL) || // Validate email format
+    empty($_POST['homeAddress']) ||
+    empty($_POST['registerContact']) ||
+    empty($_POST['password'])
+) {
+    http_response_code(400);
+    // Send an error message back to the fetch request
+    die("Error: One or more required fields are missing or invalid.");
+}
 
 // 4. Prepare the SQL INSERT statement with all fields
 $sql = "INSERT INTO users 
@@ -29,14 +44,13 @@ $sql = "INSERT INTO users
 
 $stmt = $conn->prepare($sql);
 
-// "ssssss" means six string parameters (s: string)
 $stmt->bind_param(
     "ssssss", 
-    $first_name, 
-    $last_name, 
+    $firstName, 
+    $lastName, 
     $email, 
-    $home_address, 
-    $contact_number, 
+    $homeAddress, 
+    $registerContact, 
     $hashed_password
 );
 

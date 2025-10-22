@@ -9,7 +9,7 @@
             </div>
             <div class="mb-3">
               <label for="registerEmail" class="form-label">Email address</label>
-              <input type="email" class="form-control" id="registerEmail" name="registerEmail" required> 
+              <input type="email" class="form-control" id="registerEmail" name="email" required> 
             </div>
             <div class="mb-3">
               <label for="homeAddress" class="form-label">Home Address</label>
@@ -28,7 +28,7 @@
             <div class="mb-3">
               <label for="registerPassword" class="form-label">Password</label>
               <div class="input-group">
-                <input type="password" class="form-control" id="registerPassword" name="registerPassword" required> 
+                <input type="password" class="form-control" id="registerPassword" name="password" required> 
                 <button class="btn btn-outline-secondary" type="button" id="toggleRegisterPassword">
                   <i class="fas fa-eye" id="registerPasswordIcon"></i>
                 </button>

@@ -99,34 +99,11 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form id="loginForm">
-            <div class="mb-3">
-              <label for="loginEmail" class="form-label">Email address</label>
-              <input type="email" class="form-control" id="loginEmail" name="loginEmail" required> 
-            </div>
-            <div class="mb-3">
-              <label for="loginPassword" class="form-label">Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="loginPassword" name="loginPassword" required> 
-                <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword">
-                  <i class="fas fa-eye" id="loginPasswordIcon"></i>
-                </button>
-              </div>
-            </div>
           
-            <div class="mb-3 form-check">
-              <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe"> 
-              <label class="form-check-label" for="rememberMe">
-                Remember me
-              </label>
-            </div>
-            <div class="d-grid">
-              <button type="submit" class="btn btn-primary">Log In</button>
-            </div>
-            <div class="text-center mt-3">
-              <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
-            </div>
-          </form>
+        <?php 
+            include 'login_form.php';
+        ?>
+
         </div>
         <div class="modal-footer justify-content-center">
           <p class="mb-0">Not have an account yet? <a href="#" class="text-decoration-none" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#registerModal">Sign up</a></p>
@@ -337,13 +314,15 @@
           }
         },
         submitHandler: function(form) {
-          console.log("Login form submitted successfully!");
-          var loginModal = bootstrap.Modal.getInstance(document.getElementById("loginModal"));
-          loginModal.hide();
-          form.reset(); 
-          // After successful submission, remove any remaining invalid highlights
+          // Prevent default form behavior
+          // Call the AJAX submission function defined in login_ajax.js
+          window.handleLoginAjaxSubmission(); 
+          
+          // DO NOT reset the form here; the AJAX handler will handle the modal/reset/redirection on success.
+
+          // After successful validation, clear validation state manually
           $('#loginForm').find('.is-invalid').removeClass('is-invalid');
-          $('#loginForm').find('.error').remove(); // Also remove error messages
+          $('#loginForm').find('.error').remove();
         }
       });
 
@@ -481,6 +460,7 @@
     });
     </script>
     
-<script src="path/to/signup_ajax.js"></script>
+<script src='signup_ajax.js'></script>
+<script src='login_ajax.js'></script>
 </body>
 </html>

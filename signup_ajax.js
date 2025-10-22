@@ -1,13 +1,8 @@
 document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault(); // Stop the form from submitting normally
 
-            const first_name = document.getElementById('first_name').value;
-    const last_name = document.getElementById('last_name').value;
-    const email = document.getElementById('email').value;
-    const home_address = document.getElementById('home_address').value;
-    const contact_number = document.getElementById('contact_number').value;
-    const password = document.getElementById('password').value;
-    const confirm_password = document.getElementById('confirm_password').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirm_password = document.getElementById('confirmPassword').value;
 
     const messageDisplay = document.getElementById('message');
 
@@ -17,14 +12,9 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
         messageDisplay.textContent = 'Passwords do not match!';
         return; // Stop the AJAX submission
     }
-            // 2. Create FormData object with ALL fields
-              const formData = new FormData();
-             formData.append('first_name', first_name);
-             formData.append('last_name', last_name);
-              formData.append('email', email);
-              formData.append('home_address', home_address);
-             formData.append('contact_number', contact_number);
-             formData.append('password', password); // Send the plain password to PHP for HASHING
+
+        const form = document.getElementById('registerForm');
+         const formData = new FormData(form);
 
             // 2. AJAX Request using Fetch API (modern AJAX)
             fetch('store_data.php', {
@@ -36,8 +26,8 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
                 // 3. Handle the server's response
                 if (data.trim() === 'success') {
                     messageDisplay.style.color = 'green';
-                    messageDisplay.textContent = 'Data saved successfully! 🎉';
-                    document.getElementById('dataForm').reset(); // Clear the form
+                    messageDisplay.textContent = 'Signed up successfully! 🎉';
+                    document.getElementById('registerForm').reset(); // Clear the form
                 } else {
                     messageDisplay.style.color = 'red';
                     messageDisplay.textContent = 'Error saving data: ' + data;
