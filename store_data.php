@@ -19,10 +19,9 @@ $lastName = filter_input(INPUT_POST, 'lastName', FILTER_SANITIZE_STRING);
 $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 $homeAddress = filter_input(INPUT_POST, 'homeAddress', FILTER_SANITIZE_STRING);
 $registerContact = filter_input(INPUT_POST, 'registerContact', FILTER_SANITIZE_STRING);
-$plainPassword = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
-
+$plainPassword = isset($_POST['password']) ? trim($_POST['password']) : '';
 // 3. **SECURITY CRITICAL:** Hash the password
-$hashed_password = password_hash($password, PASSWORD_DEFAULT);
+$hashed_password = password_hash($plainPassword, PASSWORD_DEFAULT);
 
 if (
     empty($_POST['firstName']) ||
@@ -53,6 +52,8 @@ $stmt->bind_param(
     $registerContact, 
     $hashed_password
 );
+
+
 
 // 5. Execute and check (same as before)
 if ($stmt->execute()) {

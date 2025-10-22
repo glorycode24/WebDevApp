@@ -35,6 +35,16 @@ if ($result->num_rows === 1) {
     $user = $result->fetch_assoc();
     $hashed_password = $user['hashed_password'];
 
+    // --- TEMPORARY DEBUGGING CODE START ---
+// Compare the submitted password to the retrieved hash
+$is_verified = password_verify($plain_password, $hashed_password);
+
+// If verification fails, show the hash and the submitted password (temporarily, NEVER DO THIS IN PRODUCTION)
+if (!$is_verified) {
+    echo "DEBUG FAIL: Verification failed. Submitted: " . $plain_password . " | Hash: " . $hashed_password;
+    exit();
+}
+
     // 3. Verify the password
     if (password_verify($plain_password, $hashed_password)) {
         
