@@ -2,13 +2,7 @@
 // product_api.php
 
 session_start();
-// Perform the same admin/login check as in admin.php here for security
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['user_id'] != 2) { 
-    // Return a JSON error for AJAX calls, not a standard die()
-    header('Content-Type: application/json');
-    die(json_encode(["draw" => 1, "recordsTotal" => 0, "recordsFiltered" => 0, "data" => [], "error" => "Access Denied"]));
-}
 
 // 1. Database Configuration
 $servername = "localhost:3306";

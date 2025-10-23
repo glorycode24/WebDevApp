@@ -50,20 +50,7 @@ var userTable = $('#userTable').DataTable({
         },
         { "data": "contact_number" },
         { "data": "role" },
-        { 
-            "data": null, 
-            "render": function (data, type, row) {
-                // Prevent admin from deleting themselves
-                var adminId = 2; // Adjust if your admin ID changes
-                if (row.user_id == adminId) {
-                    return '<span class="badge bg-secondary">Self</span>';
-                }
-                
-                // Note: We'll use a placeholder 'editUserBtn' if you decide to add a modal later
-                return '<button class="btn btn-sm btn-warning editUserBtn" data-id="'+row.user_id+'">Edit Role</button> ' +
-                       '<button class="btn btn-sm btn-danger deleteUserBtn" data-id="'+row.user_id+'">Delete</button>';
-            }
-        }
+        { "data": "actions" }
     ]
 });
     var userRoleModal = new bootstrap.Modal(document.getElementById('userRoleModal'));
@@ -131,11 +118,7 @@ var userTable = $('#userTable').DataTable({
 $('#userTable tbody').on('click', '.deleteUserBtn', function() {
     var id = $(this).data('id');
     
-    // CRITICAL: Prevent admin from deleting themselves
-    if (id == 2) { 
-        alert("You cannot delete the active administrator account.");
-        return;
-    }
+   
 
     if (confirm('WARNING: Are you sure you want to delete this user? This action is irreversible.')) {
         $.post('user_action.php?action=delete', { user_id: id }, function(response) {

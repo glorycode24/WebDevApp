@@ -2,11 +2,7 @@
 // user_api.php
 
 session_start();
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['user_id'] != 2) { 
-    // Return a JSON error for AJAX calls, not a standard die()
-    header('Content-Type: application/json');
-    die(json_encode(["draw" => 1, "recordsTotal" => 0, "recordsFiltered" => 0, "data" => [], "error" => "Access Denied"]));
-}
+
 
 // 1. Database Configuration
 $servername = "localhost:3306";
@@ -16,6 +12,13 @@ $dbname = "webappdata";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) { die(json_encode(["error" => "Connection failed: " . $conn->connect_error])); }
+
+// Check if logged in (Basic security check is necessary to prevent unauthorized access)
+if (!isset($_SESSION['logged_in']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin' || !isset($_SESSION['user_id'])) {
+    http_response_code(403);
+    die(json_encode(['data' => [], 'error' => 'Unauthorized access.']));
+}
+$current_user_id = $_SESSION['user_id']; // Current logged-in user ID
 
 // DataTables request parameters (same variables as product_api.php)
 $draw = $_POST['draw'];
@@ -86,8 +89,23 @@ $result = $stmt->get_result();
 // 4. Format the output for DataTables
 $data = [];
 while($row = $result->fetch_assoc()) {
-    $data[] = $row;
+    // Start of the corrected logic block
+    $temp_row = $row;
+    
+    // Logic to determine if this row is the currently logged-in user
+    if ($row['user_id'] == $current_user_id) {
+        $temp_row['actions'] = '<span class="badge bg-secondary">Self</span>';
+    } else {
+        // Generate the action buttons for other users
+        $temp_row['actions'] = '<button class="btn btn-sm btn-warning editUserBtn" data-id="'.$row['user_id'].'">Edit Role</button> ' .
+                               '<button class="btn btn-sm btn-danger deleteUserBtn" data-id="'.$row['user_id'].'">Delete</button>';
+    }
+    
+    // Add the row (with the new 'actions' field) to the final data array
+    $data[] = $temp_row;
+    // End of the corrected logic block
 }
+
 
 // DataTables required JSON structure
 $response = [

@@ -3,18 +3,23 @@
 
 session_start();
 
-if (!isset($_SESSION['logged_in']) || $_SESSION['user_id'] != 2) {
-    $_SESSION['logged_in'] = true;
-    $_SESSION['user_id'] = 2;
+if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'admin') {
+    // If not, redirect them to the admin login page
+    header('Location: admin_login.php'); 
+    exit();
 }
 
 // All necessary CSS and JS links will go here
 ?>
 <!DOCTYPE html>
 <html lang="en">
+    
 <head>
+
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
+    <a href="logout.php" class="btn btn-danger float-end">Log Out</a>
+
     <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css">

@@ -13,11 +13,6 @@ if ($conn->connect_error) {
     die(json_encode(['success' => false, 'message' => 'DB Connection failed.']));
 }
 
-// Basic security check
-if (!isset($_SESSION['logged_in']) || $_SESSION['user_id'] != 2 || !isset($_GET['action'])) {
-    http_response_code(403);
-    die(json_encode(['success' => false, 'message' => 'Unauthorized action.']));
-}
 
 $action = $_GET['action'];
 $response = ['success' => false, 'message' => 'Invalid action.'];
