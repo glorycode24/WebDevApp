@@ -22,6 +22,24 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['user_id'] != 2) {
 </head>
 <body>
     <div class="container mt-5">
+        <hr class="my-5">
+
+<h1>User Management</h1>
+
+<table id="userTable" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Role</th> 
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        </tbody>
+</table>
         <h1>Product Management</h1>
         <button id="addProductBtn" class="btn btn-primary mb-3">Add New Product</button>
         
@@ -72,7 +90,30 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['user_id'] != 2) {
         </div>
     </div>
 </div>
-        
+                <div class="modal fade" id="userRoleModal" tabindex="-1" aria-labelledby="userRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userRoleModalLabel">Edit User Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userRoleForm">
+                    <input type="hidden" id="user_id_role" name="user_id">
+                    <p>Editing role for: <strong id="user_name_display"></strong></p>
+                    <div class="mb-3">
+                        <label for="role_select" class="form-label">Select New Role</label>
+                        <select class="form-control" id="role_select" name="role" required>
+                            <option value="user">User (Standard)</option>
+                            <option value="admin">Admin (Full Access)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
 

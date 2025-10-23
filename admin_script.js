@@ -27,6 +27,46 @@ $(document).ready(function() {
         ]
     });
 
+    // admin_script.js (Add this after the productTable setup)
+
+// Initialize User Management Table
+var userTable = $('#userTable').DataTable({
+    "processing": true,
+    "serverSide": true, 
+    "ajax": {
+        "url": "user_api.php", // NEW API file for user data
+        "type": "POST"
+    },
+    "columns": [
+        // Corresponds to the column names in your 'users' table
+        { "data": "user_id" }, 
+        { "data": "email" },
+        { 
+            "data": null,
+            "render": function(data, type, row) {
+                // Combine first and last name for display
+                return row.first_name + ' ' + row.last_name;
+            }
+        },
+        { "data": "contact_number" },
+        { "data": "role" },
+        { 
+            "data": null, 
+            "render": function (data, type, row) {
+                // Prevent admin from deleting themselves
+                var adminId = 2; // Adjust if your admin ID changes
+                if (row.user_id == adminId) {
+                    return '<span class="badge bg-secondary">Self</span>';
+                }
+                
+                // Note: We'll use a placeholder 'editUserBtn' if you decide to add a modal later
+                return '<button class="btn btn-sm btn-warning editUserBtn" data-id="'+row.user_id+'">Edit Role</button> ' +
+                       '<button class="btn btn-sm btn-danger deleteUserBtn" data-id="'+row.user_id+'">Delete</button>';
+            }
+        }
+    ]
+});
+    var userRoleModal = new bootstrap.Modal(document.getElementById('userRoleModal'));
     // 2. INITIALIZE THE BOOTSTRAP MODAL
     // NOTE: This must be done AFTER the table, but BEFORE any handlers use it.
     var productModal = new bootstrap.Modal(document.getElementById('productModal'));
@@ -87,4 +127,61 @@ $(document).ready(function() {
             }, 'json');
         }
     });
+
+$('#userTable tbody').on('click', '.deleteUserBtn', function() {
+    var id = $(this).data('id');
+    
+    // CRITICAL: Prevent admin from deleting themselves
+    if (id == 2) { 
+        alert("You cannot delete the active administrator account.");
+        return;
+    }
+
+    if (confirm('WARNING: Are you sure you want to delete this user? This action is irreversible.')) {
+        $.post('user_action.php?action=delete', { user_id: id }, function(response) {
+            userTable.ajax.reload();
+            alert(response.message);
+        }, 'json').fail(function(xhr) {
+             alert("Error deleting user: " + (xhr.responseJSON ? xhr.responseJSON.message : xhr.responseText));
+        });
+    }
+});
+
+
+// Handle 'Edit Role' Button click (MUST be outside the delete handler)
+$('#userTable tbody').on('click', '.editUserBtn', function() {
+    var id = $(this).data('id');
+
+    // AJAX to get single user data
+    $.get('user_single_api.php?id=' + id, function(data) {
+        if(data) {
+            // Populate the modal fields
+            $('#user_id_role').val(data.user_id);
+            $('#user_name_display').text(data.first_name + ' ' + data.last_name + ' (' + data.email + ')');
+            $('#role_select').val(data.role); // Set the current role
+
+            // Show the modal
+            userRoleModal.show();
+        }
+    }, 'json').fail(function(xhr) {
+         // The error message from your screenshot 7f2afe80-43b3-4cc5-90cf-ff35d81eb219:
+         alert("Error fetching user data: " + (xhr.responseJSON ? xhr.responseJSON.error : "Unknown error"));
+    });
+});
+
+// Handle Role Form Submission (MUST be outside the delete handler)
+$('#userRoleForm').on('submit', function(e) {
+    e.preventDefault();
+
+    var formData = $(this).serialize();
+
+    $.post('user_action.php?action=update_role', formData, function(response) {
+        userRoleModal.hide();
+        userTable.ajax.reload(); // Reloads the DataTable to show the new role
+        alert(response.message);
+    }, 'json').fail(function(xhr) {
+         alert("Error saving role: " + (xhr.responseJSON ? xhr.responseJSON.message : "Unknown error"));
+    });
+});
+
 });
