@@ -1,3 +1,23 @@
+<?php
+// --- CRITICAL: Start the session at the very beginning ---
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// --- Auth Check Helper ---
+
+/**
+ * Checks if a user is currently authenticated.
+ * IMPORTANT: Adjust 'user_id' to match the key you use in $_SESSION 
+ * when a user successfully logs in (e.g., 'username', 'is_authenticated').
+ */
+function is_user_logged_in() {
+    // We check if the session variable exists and is not empty
+    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+$current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,19 +47,48 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
-          <li class="nav-item"><a class="nav-link active" href="Products.php">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
-          <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
-          <li class="nav-item"><a class="nav-link" href="Cart.php">🛒 Cart</a></li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="fas fa-sign-in-alt me-1"></i>Log In
-            </button>
-          </li>
-        </ul>
-      </div>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="Products.php">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <!-- CART LINK WITH DYNAMIC COUNT -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="Cart.php" id="cartLink">
+                            🛒 Cart 
+                            <span id="cartCount" class="badge bg-primary rounded-pill d-none">0</span>
+                        </a>
+                    </li>
+                    
+                    <!-- DYNAMIC AUTH SECTION -->
+                    <?php if (is_user_logged_in()): ?>
+            <!-- Logged In User Links -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="logout_handler.php">Logout</a></li>
+              </ul>
+            </li>
+          <?php else: ?>
+            <!-- Guest Links -->
+            <li class="nav-item">
+              <!-- data-bs-toggle and data-bs-target are used by Bootstrap to open the modal -->
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
+                <i class="fas fa-user-plus"></i> Register
+              </a>
+            </li>
+          <?php endif; ?>
+                </ul>
+            </div>
     </div>
   </nav>
 

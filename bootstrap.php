@@ -17,6 +17,7 @@ function is_user_logged_in() {
 }
 
 $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,25 +65,29 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
                     
                     <!-- DYNAMIC AUTH SECTION -->
                     <?php if (is_user_logged_in()): ?>
-                        <!-- LOGGED IN VIEW -->
-                        <li class="nav-item">
-                            <span class="nav-link text-white-50">
-                                <i class="fas fa-user me-1"></i>Hello, <?php echo htmlspecialchars($current_user_id); ?>!
-                            </span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-outline-light ms-2" href="logout_handler.php">
-                                <i class="fas fa-sign-out-alt me-1"></i>Log Out
-                            </a>
-                        </li>
-                    <?php else: ?>
-                        <!-- LOGGED OUT VIEW -->
-                        <li class="nav-item">
-                            <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-                                <i class="fas fa-sign-in-alt me-1"></i>Log In
-                            </button>
-                        </li>
-                    <?php endif; ?>
+            <!-- Logged In User Links -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="logout_handler.php">Logout</a></li>
+              </ul>
+            </li>
+          <?php else: ?>
+            <!-- Guest Links -->
+            <li class="nav-item">
+              <!-- data-bs-toggle and data-bs-target are used by Bootstrap to open the modal -->
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
+                <i class="fas fa-user-plus"></i> Register
+              </a>
+            </li>
+          <?php endif; ?>
                 </ul>
             </div>
     </div>
