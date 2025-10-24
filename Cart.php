@@ -1,22 +1,71 @@
 <?php
+
 // --- CRITICAL: Start the session at the very beginning ---
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+include_once 'includes/utils.php';
 
-// --- Auth Check Helper ---
+$current_user_name = $_SESSION['user_name'] ?? 'Guest';
+$cart_item_count = get_cart_item_count(); // Calculate the count for display
 
-/**
- * Checks if a user is currently authenticated.
- * IMPORTANT: Adjust 'user_id' to match the key you use in $_SESSION 
- * when a user successfully logs in (e.g., 'username', 'is_authenticated').
- */
-function is_user_logged_in() {
-    // We check if the session variable exists and is not empty
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+// Redirect to login if not logged in
+if (!is_user_logged_in()) {
+    header('Location: bootstrap.php');
+    exit;
 }
 
-$current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
+// Get the user ID for fetching cart data
+$user_id = $_SESSION['user_id'];
+
+/**
+ * Fetches all cart items for the current user.
+ * @param int $user_id The ID of the logged-in user.
+ * @return array An array of cart items, or an empty array on failure.
+ */
+function get_user_cart_items($user_id) {
+    $conn = get_db_connection();
+    if ($conn === null) return [];
+
+    // SQL to join carts with products to get details
+    $sql = "SELECT 
+                c.product_id, 
+                c.quantity, 
+                p.name, 
+                p.price, 
+                p.image_url,
+                p.stock_quantity
+            FROM carts c
+            JOIN products p ON c.product_id = p.product_id
+            WHERE c.user_id = ?";
+
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        error_log("Cart Fetch SQL Prepare Failed: " . $conn->error);
+        $conn->close();
+        return [];
+    }
+
+    $stmt->bind_param("i", $user_id);
+    if (!$stmt->execute()) {
+        error_log("Cart Fetch SQL Execute Failed: " . $stmt->error);
+        $stmt->close();
+        $conn->close();
+        return [];
+    }
+
+    $result = $stmt->get_result();
+    $cart_items = $result->fetch_all(MYSQLI_ASSOC);
+
+    $stmt->close();
+    $conn->close();
+    
+    return $cart_items;
+}
+
+$cart_items = get_user_cart_items($user_id);
+$cart_total = 0.00; // Initialize cart total
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,7 +91,7 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="bootstrap.html">Shine</a>
+      <a class="navbar-brand" href="bootstrap.php">Shine</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -56,11 +105,14 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
                 <ul class="navbar-nav ms-auto">
                     <!-- CART LINK WITH DYNAMIC COUNT -->
                     <li class="nav-item">
-                        <a class="nav-link active" href="Cart.php" id="cartLink">
-                            🛒 Cart 
-                            <span id="cartCount" class="badge bg-primary rounded-pill d-none">0</span>
-                        </a>
-                    </li>
+  <a class="nav-link active position-relative" href="Cart.php">
+    <i class="fas fa-shopping-cart"></i> Cart
+    <!-- Dynamic Cart Count Badge -->
+    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">
+      <?php echo $cart_item_count; ?>
+    </span>
+  </a>
+</li>
                     
                     <!-- DYNAMIC AUTH SECTION -->
                     <?php if (is_user_logged_in()): ?>
@@ -101,24 +153,85 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   </header>
 
   <!-- CART CONTENT -->
-  <section class="py-5">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body py-5">
-              <div class="mb-4">
-                <i class="fas fa-shopping-cart text-muted" style="font-size: 4rem;"></i>
-              </div>
-              <h2 class="card-title mb-3">Your cart is empty</h2>
-              <p class="card-text text-muted mb-4">Looks like you haven't added any items to your cart yet. Start shopping to fill it up!</p>
-              <a href="Products.php" class="btn btn-primary btn-lg">Continue Shopping</a>
-            </div>
-          </div>
+  <div class="container my-5">
+    <h1 class="mb-4 text-center">Your Shopping Cart</h1>
+    <div id="cart-message" class="alert d-none" role="alert"></div>
+
+    <?php if (empty($cart_items)): ?>
+        <div class="card shadow-sm p-5 text-center">
+            <i class="fas fa-box-open fa-3x text-secondary mb-3"></i>
+            <p class="lead">Your cart is empty!</p>
+            <a href="Products.php" class="btn btn-primary mt-3 w-50 mx-auto">Start Shopping</a>
         </div>
-      </div>
-    </div>
-  </section>
+    <?php else: ?>
+        <div class="table-responsive bg-white shadow-sm p-4">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col" class="text-center">Price</th>
+                        <th scope="col" class="text-center">Quantity</th>
+                        <th scope="col" class="text-end">Subtotal</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody id="cart-table-body">
+                    <?php foreach ($cart_items as $item): 
+                        $subtotal = $item['quantity'] * $item['price'];
+                        $cart_total += $subtotal;
+                    ?>
+                    <tr id="cart-item-<?php echo $item['product_id']; ?>" data-product-id="<?php echo $item['product_id']; ?>" data-price="<?php echo htmlspecialchars($item['price']); ?>">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="<?php echo htmlspecialchars($item['image_url'] ?? 'https://placehold.co/80x80/007bff/ffffff?text=Product'); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['name']); ?>" class="cart-img me-3" onerror="this.onerror=null;this.src='https://placehold.co/80x80/007bff/ffffff?text=Product';">
+                                <div>
+                                    <h6 class="mb-0"><?php echo htmlspecialchars($item['name']); ?></h6>
+                                    <small class="text-muted">In stock: <?php echo htmlspecialchars($item['stock_quantity']); ?></small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">$<span class="product-price"><?php echo number_format($item['price'], 2); ?></span></td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button class="btn btn-sm btn-outline-secondary decrease-qty" data-product-id="<?php echo $item['product_id']; ?>" type="button" aria-label="Decrease quantity">-</button>
+                                <input type="number" 
+                                       class="form-control qty-input mx-1" 
+                                       value="<?php echo htmlspecialchars($item['quantity']); ?>" 
+                                       min="1" 
+                                       max="<?php echo htmlspecialchars($item['stock_quantity']); ?>"
+                                       data-product-id="<?php echo $item['product_id']; ?>"
+                                       onchange="updateCartItem(this)">
+                                <button class="btn btn-sm btn-outline-secondary increase-qty" data-product-id="<?php echo $item['product_id']; ?>" type="button" aria-label="Increase quantity">+</button>
+                            </div>
+                        </td>
+                        <td class="text-end fw-bold">$<span class="item-subtotal-display" id="subtotal-<?php echo $item['product_id']; ?>"><?php echo number_format($subtotal, 2); ?></span></td>
+                        <td>
+                            <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="<?php echo $item['product_id']; ?>" aria-label="Remove item">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-end">Total</th>
+                        <th class="text-end fw-bold fs-5">$<span id="cart-total-display"><?php echo number_format($cart_total, 2); ?></span></th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4">
+            <a href="Products.php" class="btn btn-secondary me-2">Continue Shopping</a>
+            <button class="btn btn-success" id="checkout-button">
+                <i class="fas fa-credit-card me-2"></i> Checkout ($<span id="checkout-total-display"><?php echo number_format($cart_total, 2); ?></span>)
+            </button>
+        </div>
+    <?php endif; ?>
+  </div>
 
   <!-- LOGIN MODAL -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
@@ -222,6 +335,170 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   
   <!-- Custom JavaScript for modal interactions -->
   <script>
+
+    const processingProducts = new Set();
+    const cartTotalDisplay = document.getElementById('cart-total-display');
+    const checkoutTotalDisplay = document.getElementById('checkout-total-display');
+    const cartCountDisplay = document.getElementById('cart-count');
+    const cartMessageDisplay = document.getElementById('cart-message');
+
+    /**
+     * Updates the main cart count in the header.
+     * @param {number} count The new total number of items.
+     */
+    function updateCartCount(count) {
+        if (cartCountDisplay) {
+            cartCountDisplay.textContent = count;
+        }
+    }
+
+    /**
+     * Shows a feedback message to the user.
+     * @param {string} message The message to display.
+     * @param {boolean} isSuccess Whether the message is a success or error.
+     */
+    function showCartMessage(message, isSuccess = true) {
+        cartMessageDisplay.textContent = message;
+        cartMessageDisplay.classList.remove('d-none', 'alert-success', 'alert-danger');
+        cartMessageDisplay.classList.add(isSuccess ? 'alert-success' : 'alert-danger');
+        // Auto-hide the message after 5 seconds
+        setTimeout(() => {
+            cartMessageDisplay.classList.add('d-none');
+        }, 5000);
+    }
+    
+    /**
+     * Recalculates the cart total based on current visible subtotals.
+     */
+    function recalculateCartTotal() {
+        let total = 0.00;
+        document.querySelectorAll('.item-subtotal-display').forEach(el => {
+            // Note: We parse the text content which is formatted, so we remove commas
+            total += parseFloat(el.textContent.replace(/,/g, ''));
+        });
+        
+        const formattedTotal = total.toFixed(2);
+        
+        if (cartTotalDisplay) {
+            cartTotalDisplay.textContent = formattedTotal;
+        }
+        if (checkoutTotalDisplay) {
+            checkoutTotalDisplay.textContent = formattedTotal;
+        }
+    }
+
+    /**
+     * Handles the AJAX call to update the cart in the database.
+     * @param {number} productId The ID of the product.
+     * @param {string} action The action: 'update', 'remove'.
+     * @param {number} quantity The new quantity (for 'update' action).
+     * @param {HTMLInputElement} inputEl The quantity input element (for 'update' action).
+     */
+    function processCartAction(productId, action, quantity = 0, inputEl = null) {
+        if (processingProducts.has(productId)) {
+            showCartMessage("Please wait for the current action to finish.", false);
+            return;
+        }
+        
+        processingProducts.add(productId);
+        const $row = $(`#cart-item-${productId}`);
+        const productPrice = parseFloat($row.data('price'));
+        
+        // Disable row controls while processing
+        $row.find('button, input').prop('disabled', true);
+        $row.addClass('table-active');
+
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        if (action === 'update') {
+            formData.append('quantity', quantity);
+        }
+        
+        fetch(`cart_action.php?action=${action}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                // Try to read JSON error first
+                return response.json().catch(() => {
+                    // Fallback to reading text if JSON fails
+                    return response.text().then(text => ({ success: false, message: text || 'Server error.' }));
+                }).then(json => { throw new Error(json.message) });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showCartMessage(data.message, true);
+                updateCartCount(data.total_items);
+                
+                if (action === 'remove') {
+                    // Remove the entire row
+                    $row.fadeOut(300, function() { 
+                        $(this).remove(); 
+                        recalculateCartTotal(); 
+                        // Show empty cart message if no rows left
+                        if ($('#cart-table-body').children('tr').length === 0) {
+                            // Reload the page to display the empty cart message correctly
+                            window.location.reload(); 
+                        }
+                    });
+                } else if (action === 'update') {
+                    // Update quantity display and subtotal
+                    const newQty = parseInt(data.new_quantity);
+                    const newSubtotal = newQty * productPrice;
+                    
+                    if (inputEl) {
+                        inputEl.value = newQty; // Ensure the input reflects the server's final value
+                    }
+                    $row.find('.item-subtotal-display').text(newSubtotal.toFixed(2));
+                    recalculateCartTotal();
+                    
+                    // Re-enable controls
+                    $row.find('button, input').prop('disabled', false);
+                    $row.removeClass('table-active');
+                }
+                
+            } else {
+                showCartMessage("Cart Error: " + data.message, false);
+                // Re-enable controls on error
+                $row.find('button, input').prop('disabled', false);
+                $row.removeClass('table-active');
+            }
+        })
+        .catch(error => {
+            showCartMessage("An unknown error occurred: " + error.message, false);
+            // Re-enable controls on network/catch error
+            $row.find('button, input').prop('disabled', false);
+            $row.removeClass('table-active');
+        })
+        .finally(() => {
+            processingProducts.delete(productId);
+        });
+    }
+
+    /**
+     * Function to call from the quantity input's onchange event.
+     */
+    window.updateCartItem = function(input) {
+        const productId = parseInt(input.getAttribute('data-product-id'));
+        let newQty = parseInt(input.value);
+        const maxQty = parseInt(input.max);
+        
+        // Client-side validation
+        if (isNaN(newQty) || newQty < 1) {
+            newQty = 1;
+            input.value = newQty;
+        }
+        if (newQty > maxQty) {
+            newQty = maxQty;
+            input.value = newQty;
+            showCartMessage(`Quantity limited to ${maxQty} (stock available).`, false);
+        }
+
+        processCartAction(productId, 'update', newQty, input);
+    }
 
     $(document).ready(function () {
       

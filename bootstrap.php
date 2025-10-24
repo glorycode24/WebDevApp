@@ -1,22 +1,16 @@
 <?php
+
+include_once 'includes/utils.php';
+
 // --- CRITICAL: Start the session at the very beginning ---
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- Auth Check Helper ---
+$current_user_name = $_SESSION['user_name'] ?? 'Guest';
+$cart_item_count = get_cart_item_count(); // Calculate the count for display
 
-/**
- * Checks if a user is currently authenticated.
- * IMPORTANT: Adjust 'user_id' to match the key you use in $_SESSION 
- * when a user successfully logs in (e.g., 'username', 'is_authenticated').
- */
-function is_user_logged_in() {
-    // We check if the session variable exists and is not empty
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-}
-
-$current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -43,7 +37,7 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="bootstrap.html">Shine</a>
+      <a class="navbar-brand" href="bootstrap.php">Shine</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -57,11 +51,14 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
                 <ul class="navbar-nav ms-auto">
                     <!-- CART LINK WITH DYNAMIC COUNT -->
                     <li class="nav-item">
-                        <a class="nav-link" href="Cart.php" id="cartLink">
-                            🛒 Cart 
-                            <span id="cartCount" class="badge bg-primary rounded-pill d-none">0</span>
-                        </a>
-                    </li>
+  <a class="nav-link position-relative" href="Cart.php">
+    <i class="fas fa-shopping-cart"></i> Cart
+    <!-- Dynamic Cart Count Badge -->
+    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">
+      <?php echo $cart_item_count; ?>
+    </span>
+  </a>
+</li>
                     
                     <!-- DYNAMIC AUTH SECTION -->
                     <?php if (is_user_logged_in()): ?>
@@ -102,46 +99,23 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   </header>
 
   <!-- PRODUCTS -->
-  <section class="py-5">
-    <div class="container">
-      <h2 class="text-center mb-4">Featured Products</h2>
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product1" class="card-img-top" alt="Product 1">
-            <div class="card-body">
-              <h5 class="card-title">Elegant Chair</h5>
-              <p class="card-text">$99.00</p>
-              <!-- MODIFIED: Added class and data-product-id="1" -->
-              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="1">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product2" class="card-img-top" alt="Product 2">
-            <div class="card-body">
-              <h5 class="card-title">Smart Lamp</h5>
-              <p class="card-text">$49.00</p>
-              <!-- MODIFIED: Added class and data-product-id="2" -->
-              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="2">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product3" class="card-img-top" alt="Product 3">
-            <div class="card-body">
-              <h5 class="card-title">Modern Desk</h5>
-              <p class="card-text">$199.00</p>
-              <!-- MODIFIED: Added class and data-product-id="3" -->
-              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="3">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-      </div>
+  <main class="container my-5">
+    <h2 class="text-center mb-4">Featured Products</h2>
+    <p class="text-center lead">Our selection of popular and newly added items.</p>
+
+    <div id="featured-product-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        <div id="loading-indicator-home" class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading featured products...</span>
+            </div>
+            <p class="mt-2">Loading featured products...</p>
+        </div>
     </div>
-  </section>
+
+    <div class="text-center mt-5">
+        <a href="Products.php" class="btn btn-outline-primary btn-lg">View All Products</a>
+    </div>
+  </main>
 
   <!-- LOGIN MODAL -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
@@ -247,6 +221,14 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   <script>
 
     $(document).ready(function () {
+      
+      function updateCartCount(newCount) {
+        // Find the badge based on the cart icon's sibling and update its text
+        const cartBadge = document.querySelector('.navbar .fa-shopping-cart').nextElementSibling;
+        if (cartBadge) {
+            cartBadge.textContent = newCount;
+        }
+    }
       
       // Define a custom method to ensure a field contains only letters,
       // and optionally a single space, hyphen, or apostrophe between words.
@@ -551,6 +533,59 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
         }
       });
 
+        const productList = $('#featured-product-list'); // Changed ID for homepage
+
+        function fetchAndRenderFeaturedProducts() {
+            // Show loading indicator
+            $('#loading-indicator-home').show();
+            productList.empty(); // Clear existing content
+
+        
+            $.ajax({
+                url: 'product_store_api.php?limit=4', // Fetch only 4 featured products
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    $('#loading-indicator-home').hide();
+                    if (response.products && response.products.length > 0) {
+                        response.products.forEach(product => {
+                            // Determine button state based on stock (API only returns in-stock)
+                            const buttonText = '<i class="fa fa-shopping-cart me-2"></i>Add to Cart';
+                            const buttonClass = 'btn-primary add-to-cart-btn'; // Use existing class for the handler
+
+                            const productCard = `
+                                <div class="col">
+                                    <div class="card h-100 shadow-sm">
+                                        <img src="${product.image_url}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: cover;">
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">${product.name}</h5>
+                                            <p class="card-text text-muted">${product.description ? product.description.substring(0, 50) + '...' : ''}</p>
+                                            <div class="mt-auto">
+                                                <p class="card-text fs-4 fw-bold text-primary">$${parseFloat(product.price).toFixed(2)}</p>
+                                                <button class="btn ${buttonClass} w-100" data-product-id="${product.product_id}"> 
+                                                    ${buttonText}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            productList.append(productCard);
+                        });
+                    } else {
+                        productList.html('<div class="col-12 text-center"><p class="lead text-warning">No featured products available yet.</p></div>');
+                    }
+                },
+                error: function() {
+                    $('#loading-indicator-home').hide();
+                    productList.html('<div class="col-12 text-center"><p class="lead text-danger">Error loading featured products.</p></div>');
+                }
+            });
+        }
+        
+        // Load featured products when the page is ready
+        fetchAndRenderFeaturedProducts();
+
         $(document).on('click', '.add-to-cart-btn', function() {
         // Get the product ID from the button's data attribute
         var productId = $(this).data('product-id');
@@ -580,7 +615,7 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
                 // Use a custom modal or message box instead of alert() in production
                 if (response.success) {
                     alert("Success! " + response.message);
-                    
+                    updateCartCount(response.total_items);
                     // TODO: Update the cart count icon in the header here!
                     // updateCartCount(response.total_items); 
                 } else {

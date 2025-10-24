@@ -1,16 +1,7 @@
 <?php
 // 1. Database Configuration (same as before)
-$servername = "localhost:3306";
-$username = "root"; 
-$password = "Asdasfssdafsadfadas123!";     
-$dbname = "webappdata";
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+include_once 'includes/utils.php';
 
 
 // 2. Get ALL data from AJAX POST request

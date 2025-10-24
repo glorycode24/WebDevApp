@@ -1,23 +1,16 @@
 <?php
+include_once 'includes/utils.php';
+
 // --- CRITICAL: Start the session at the very beginning ---
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- Auth Check Helper ---
+$current_user_name = $_SESSION['user_name'] ?? 'Guest';
+$cart_item_count = get_cart_item_count(); // Calculate the count for display
 
-/**
- * Checks if a user is currently authenticated.
- * IMPORTANT: Adjust 'user_id' to match the key you use in $_SESSION 
- * when a user successfully logs in (e.g., 'username', 'is_authenticated').
- */
-function is_user_logged_in() {
-    // We check if the session variable exists and is not empty
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-}
 
-$current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
-
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,7 +35,7 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="bootstrap.html">Shine</a>
+      <a class="navbar-brand" href="bootstrap.php">Shine</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -56,11 +49,14 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
                 <ul class="navbar-nav ms-auto">
                     <!-- CART LINK WITH DYNAMIC COUNT -->
                     <li class="nav-item">
-                        <a class="nav-link" href="Cart.php" id="cartLink">
-                            🛒 Cart 
-                            <span id="cartCount" class="badge bg-primary rounded-pill d-none">0</span>
-                        </a>
-                    </li>
+  <a class="nav-link position-relative" href="Cart.php">
+    <i class="fas fa-shopping-cart"></i> Cart
+    <!-- Dynamic Cart Count Badge -->
+    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">
+      <?php echo $cart_item_count; ?>
+    </span>
+  </a>
+</li>
                     
                     <!-- DYNAMIC AUTH SECTION -->
                     <?php if (is_user_logged_in()): ?>
@@ -104,41 +100,16 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   <section class="py-5">
     <div class="container">
       <h2 class="text-center mb-4">Shop All Products</h2>
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product1" class="card-img-top" alt="Product 1">
-            <div class="card-body">
-              <h5 class="card-title">Elegant Chair</h5>
-              <p class="card-text">$99.00</p>
-              <!-- MODIFIED: Added class and data-product-id="1" -->
-              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="1">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product2" class="card-img-top" alt="Product 2">
-            <div class="card-body">
-              <h5 class="card-title">Smart Lamp</h5>
-              <p class="card-text">$49.00</p>
-              <!-- MODIFIED: Added class and data-product-id="2" -->
-              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="2">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product3" class="card-img-top" alt="Product 3">
-            <div class="card-body">
-              <h5 class="card-title">Modern Desk</h5>
-              <p class="card-text">$199.00</p>
-              <!-- MODIFIED: Added class and data-product-id="3" -->
-              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="3">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- PRODUCT GRID - Dynamically populated by JavaScript -->
+      <div id="product-list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        <div id="loading-indicator-home" class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading featured products...</span>
+            </div>
+            <p class="mt-2">Loading featured products...</p>
+        </div>
+    </div>
+      
     </div>
   </section>
 
@@ -244,6 +215,26 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   
   <!-- Custom JavaScript for modal interactions -->
   <script>
+    function displayMessage(message, type = 'success') {
+        const container = $('#statusMessageContainer');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show d-flex align-items-center" role="alert">
+                <i class="fa ${iconClass} me-2"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        const $alert = $(alertHtml);
+        container.append($alert);
+
+        // Auto-close after 5 seconds
+        setTimeout(() => {
+            $alert.alert('close');
+        }, 5000);
+    }
 
     $(document).ready(function () {
       
@@ -549,58 +540,129 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
             return false;
         }
       });
-      
-      $(document).on('click', '.add-to-cart-btn', function() {
-        // Get the product ID from the button's data attribute
-        var productId = $(this).data('product-id');
-        
-        // You might want to get quantity from an input field if you have one, 
-        // but we default to 1 for a simple "Add to Cart" button.
-        var quantity = 1; 
 
-        if (!productId) {
-            alert("Error: Missing product information.");
-            return;
+    const productListContainer = $('#product-list');
+
+        // --- NEW: Function to fetch and render products via AJAX ---
+        function fetchAndRenderProducts() {
+            // NOTE: This call automatically gets ALL products because no 'limit' is passed.
+            $.ajax({
+                url: 'product_store_api.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    // *** FIX: Removed the undefined $loadingIndicator. We clear the container instead. ***
+                    productListContainer.empty(); 
+
+                    if (response.success && response.products.length > 0) {
+                        // Loop through products and create HTML
+                        response.products.forEach(product => {
+                            // Ensure price is a valid number, defaulting to 0.00
+                            const price = parseFloat(product.price) || 0.00;
+                            
+                            const productCard = `
+                                <div class="col">
+                                    <div class="card h-100 shadow-sm border-0">
+                                        <img src="${product.image_url || 'https://placehold.co/400x200?text=Product+Image'}" 
+                                             class="card-img-top product-card-img" 
+                                             alt="${product.name}" 
+                                             onerror="this.onerror=null;this.src='https://placehold.co/400x200?text=Image+Missing';">
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">${product.name}</h5>
+                                            <p class="card-text text-muted flex-grow-1">${product.description.substring(0, 70) + (product.description.length > 70 ? '...' : '')}</p>
+                                            <p class="card-text fs-4 fw-bold mb-3">$${price.toFixed(2)}</p>
+                                            <button 
+                                                class="btn btn-primary add-to-cart-btn mt-auto" 
+                                                data-product-id="${product.product_id}"
+                                            >
+                                                <i class="fas fa-cart-plus"></i> Add to Cart
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            productListContainer.append(productCard);
+                        });
+                    } else {
+                        // Handle case where API works but returns no products
+                        productListContainer.append(`
+                            <div class="col-12">
+                                <div class="alert alert-warning text-center" role="alert">
+                                    <h4 class="alert-heading">No Products Available</h4>
+                                    <p class="mb-0">The store currently has no products listed.</p>
+                                </div>
+                            </div>
+                        `);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle API failure (e.g., database connection error in product_store_api.php)
+                    productListContainer.empty().append(`
+                        <div class="col-12">
+                            <div class="alert alert-danger text-center" role="alert">
+                                <h4 class="alert-heading">Failed to Load Products!</h4>
+                                <p>Could not connect to the product data source.</p>
+                                <p class="mb-0"><small>Error: ${xhr.status} ${status}</small></p>
+                            </div>
+                        </div>
+                    `);
+                    console.error("Product Fetch Error:", error, xhr.responseText);
+                }
+            });
         }
+        
+        // Load products when the page is ready
+        fetchAndRenderProducts();
 
-        // Disable button and show loading state
-        var $button = $(this);
-        $button.prop('disabled', true).text('Adding...');
+    // === ADD TO CART BUTTON HANDLER ===
+      
+      // --- ADD TO CART AJAX LOGIC ---
+        // Attaches a click handler to all buttons with the class 'add-to-cart-btn'
+        $('.add-to-cart-btn').on('click', function() {
+            // Retrieve the product ID from the data attribute
+            var productId = $(this).data('product-id');
+            // Default quantity is 1 for a single click
+            var quantity = 1; 
 
-        $.ajax({
-            url: 'cart_action.php?action=add',
-            type: 'POST',
-            dataType: 'json',
-            data: { 
-                product_id: productId, 
-                quantity: quantity 
-            },
-            success: function(response) {
-                // Use a custom modal or message box instead of alert() in production
-                if (response.success) {
-                    alert("Success! " + response.message);
-                    
-                    // TODO: Update the cart count icon in the header here!
-                    // updateCartCount(response.total_items); 
-                } else {
-                    alert("Cart Error: " + response.message);
+            // Disable button and show loading state
+            var $button = $(this);
+            $button.prop('disabled', true).text('Adding...');
+
+            $.ajax({
+                url: 'cart_action.php?action=add',
+                type: 'POST',
+                dataType: 'json',
+                data: { 
+                    product_id: productId, 
+                    quantity: quantity 
+                },
+                success: function(response) {
+                    // Use a custom modal or message box instead of alert() in production
+                    if (response.success) {
+                        alert("Success! " + response.message);
+                        
+                        // TODO: Update the cart count icon in the header here!
+                        updateCartCount(response.total_items); 
+                    } else {
+                        alert("Cart Error: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // If the user isn't logged in, the server returns 401
+                    if (xhr.status === 401) {
+                        // NOTE: If the PHP handler returns JSON error, this will be available in xhr.responseJSON
+                        alert("Error: You must be logged in to add items to the cart.");
+                    } else {
+                        alert("An unknown error occurred while adding to cart.");
+                        console.error("AJAX Error:", error);
+                    }
+                },
+                complete: function() {
+                    // Re-enable button
+                    $button.prop('disabled', false).html('<i class="fas fa-cart-plus"></i> Add to Cart');
                 }
-            },
-            error: function(xhr, status, error) {
-                // If the user isn't logged in, the server returns 401
-                if (xhr.status === 401) {
-                    alert("Error: " + xhr.responseJSON.message);
-                } else {
-                    alert("An unknown error occurred while adding to cart.");
-                    console.error("AJAX Error:", error);
-                }
-            },
-            complete: function() {
-                // Re-enable button
-                $button.prop('disabled', false).text('Add to Cart');
-            }
+            });
         });
-    });
 
     });
     </script>

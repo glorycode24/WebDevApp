@@ -3,19 +3,10 @@
 
 session_start();
 
-// 1. Database Configuration (Use your existing credentials)
-$servername = "localhost:3306";
-$username = "root"; 
-$password = "Asdasfssdafsadfadas123!";   
-$dbname = "webappdata";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) { 
-    die(json_encode(["success" => false, "message" => "Connection failed: " . $conn->connect_error])); 
-}
-
+include_once 'includes/utils.php';
 // Set JSON header for the response
 header('Content-Type: application/json');
+$conn = get_db_connection();
 
 // Security check: Must be logged in
 if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user_id'])) {
@@ -23,10 +14,15 @@ if (!isset($_SESSION['logged_in']) || !isset($_SESSION['user_id'])) {
     die(json_encode(["success" => false, "message" => "You must be logged in to modify your cart."]));
 }
 
-$user_id = $_SESSION['user_id'];
-$action = $_GET['action'] ?? '';
+// --- Retrieve required data from the request and session ---
+$user_id = $_SESSION['user_id']; // Get user_id from session
+
+// The 'action' comes from the URL query string (e.g., ?action=add)
+$action = $_GET['action'] ?? ''; 
+
+// product_id and quantity come from the POST body (as defined in your AJAX call)
 $product_id = $_POST['product_id'] ?? null;
-$quantity = $_POST['quantity'] ?? 1;
+$quantity = $_POST['quantity'] ?? null;
 
 if (empty($product_id) || !is_numeric($product_id)) {
     http_response_code(400);
@@ -34,8 +30,11 @@ if (empty($product_id) || !is_numeric($product_id)) {
 }
 
 // Convert quantity to a safe integer, minimum of 1
-$quantity = max(1, (int)$quantity);
-
+if (empty($quantity) || !is_numeric($quantity)) {
+    $quantity = 1; // Default to 1 if not provided or invalid
+} else {
+    $quantity = max(1, (int)$quantity); // Ensure quantity is at least 1
+}
 // --- 1. HANDLE 'ADD' or 'UPDATE' ACTION ---
 if ($action === 'add') {
     // Check if the product already exists in the cart for this user
@@ -56,9 +55,15 @@ if ($action === 'add') {
         $stmt_update->bind_param("iii", $new_quantity, $user_id, $product_id);
         
         if ($stmt_update->execute()) {
-            echo json_encode(["success" => true, "message" => "Product quantity updated in cart.", "new_quantity" => $new_quantity]);
+            echo json_encode([
+            "success" => true, 
+            "message" => "Product quantity updated in cart.", 
+            "new_quantity" => $new_quantity,
+            "total_items" => get_cart_item_count() // <-- New
+        ]);
         } else {
-            echo json_encode(["success" => false, "message" => "Failed to update cart item: " . $conn->error]);
+            error_log("Failed to update cart item for user $user_id, product $product_id: " . $conn->error);
+            echo json_encode(["success" => false, "message" => "Failed to update cart item due to a server error."]);
         }
         $stmt_update->close();
 
@@ -69,7 +74,11 @@ if ($action === 'add') {
         $stmt_insert->bind_param("iii", $user_id, $product_id, $quantity);
         
         if ($stmt_insert->execute()) {
-            echo json_encode(["success" => true, "message" => "Product added to cart."]);
+            echo json_encode([
+            "success" => true, 
+            "message" => "Product added to cart.",
+            "total_items" => get_cart_item_count() // <-- New
+        ]);
         } else {
             echo json_encode(["success" => false, "message" => "Failed to add product to cart: " . $conn->error]);
         }

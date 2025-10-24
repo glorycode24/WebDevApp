@@ -4,19 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- Auth Check Helper ---
+include_once 'includes/utils.php';
+$current_user_name = $_SESSION['user_name'] ?? 'Guest';
+$cart_item_count = get_cart_item_count(); // Calculate the count for display
 
-/**
- * Checks if a user is currently authenticated.
- * IMPORTANT: Adjust 'user_id' to match the key you use in $_SESSION 
- * when a user successfully logs in (e.g., 'username', 'is_authenticated').
- */
-function is_user_logged_in() {
-    // We check if the session variable exists and is not empty
-    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-}
-
-$current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,7 +34,7 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="bootstrap.html">Shine</a>
+      <a class="navbar-brand" href="bootstrap.php">Shine</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -56,11 +48,14 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
                 <ul class="navbar-nav ms-auto">
                     <!-- CART LINK WITH DYNAMIC COUNT -->
                     <li class="nav-item">
-                        <a class="nav-link" href="Cart.php" id="cartLink">
-                            🛒 Cart 
-                            <span id="cartCount" class="badge bg-primary rounded-pill d-none">0</span>
-                        </a>
-                    </li>
+  <a class="nav-link position-relative" href="Cart.php">
+    <i class="fas fa-shopping-cart"></i> Cart
+    <!-- Dynamic Cart Count Badge -->
+    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">
+      <?php echo $cart_item_count; ?>
+    </span>
+  </a>
+</li>
                     
                     <!-- DYNAMIC AUTH SECTION -->
                     <?php if (is_user_logged_in()): ?>
