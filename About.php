@@ -1,3 +1,15 @@
+<?php
+// --- CRITICAL: Start the session at the very beginning ---
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+include_once 'includes/utils.php';
+$current_user_name = $_SESSION['user_name'] ?? 'Guest';
+$cart_item_count = get_cart_item_count(); // Calculate the count for display
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,24 +34,56 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="bootstrap.html">Shine</a>
+      <a class="navbar-brand" href="bootstrap.php">Shine</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
-          <li class="nav-item"><a class="nav-link active" href="About.php">About</a></li>
-          <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
-          <li class="nav-item"><a class="nav-link" href="Cart.php">🛒 Cart</a></li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="fas fa-sign-in-alt me-1"></i>Log In
-            </button>
-          </li>
-        </ul>
-      </div>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="About.php">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <!-- CART LINK WITH DYNAMIC COUNT -->
+                    <li class="nav-item">
+  <a class="nav-link position-relative" href="Cart.php">
+    <i class="fas fa-shopping-cart"></i> Cart
+    <!-- Dynamic Cart Count Badge -->
+    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">
+      <?php echo $cart_item_count; ?>
+    </span>
+  </a>
+</li>
+                    
+                    <!-- DYNAMIC AUTH SECTION -->
+                    <?php if (is_user_logged_in()): ?>
+            <!-- Logged In User Links -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="logout_handler.php">Logout</a></li>
+              </ul>
+            </li>
+          <?php else: ?>
+            <!-- Guest Links -->
+            <li class="nav-item">
+              <!-- data-bs-toggle and data-bs-target are used by Bootstrap to open the modal -->
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
+                <i class="fas fa-user-plus"></i> Register
+              </a>
+            </li>
+          <?php endif; ?>
+                </ul>
+            </div>
     </div>
   </nav>
 
@@ -70,17 +114,17 @@
           <h3 class="mt-5 mb-3">Meet the Team</h3>
           <div class="row">
             <div class="col-md-4 text-center mb-4">
-              <img src="https://picsum.photos/120/120?person1" class="rounded-circle mb-2" alt="Team Member 1">
+              <img src="https://scontent.fmnl45-2.fna.fbcdn.net/v/t39.30808-1/564724678_789803570535936_6287668310946606898_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=109&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeEi8SYRNyD4qfLqNf2X65Wv5fMqFQ6TgzHl8yoVDpODMUTtORRLHxl9SrjQulZ9W_D8Q8I3WxlRVSQtFn7N8HxI&_nc_ohc=L0odwnn5DrIQ7kNvwHZQMHa&_nc_oc=Adn6MqhuWr_eZtlmzk2fvXT7M31TiXW0J1rpFXDOSU29sZok16L33_oP4bzQ5XMybA4&_nc_zt=24&_nc_ht=scontent.fmnl45-2.fna&_nc_gid=Fq7LR4mcJL3q0caYwmC-qA&oh=00_AfeQQ7PSxmGmNwKBhA_IPXwYBPybYBwHwDFmZYwuEhBcPg&oe=6900FA53" class="rounded-circle mb-2" alt="Team Member 1">
               <h5>John Regienald</h5>
               <p class="text-muted">Founder & CEO</p>
             </div>
             <div class="col-md-4 text-center mb-4">
-              <img src="https://picsum.photos/120/120?person2" class="rounded-circle mb-2" alt="Team Member 2">
+              <img src="https://scontent.fmnl45-2.fna.fbcdn.net/v/t39.30808-1/544734926_1759483318012001_2104424727844761203_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=108&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeFVJmMyUHKAGsD0lshXVPyFBhRXDZ2nOW4GFFcNnac5bqQvJWVrddGkm1aCqtgJ6m64_kjEPUZZKTTyLVCF-207&_nc_ohc=3SBtGYSJzYsQ7kNvwHG9KOe&_nc_oc=AdnFUSBB5BTD2Wzsvk8XjFXmt3YjYC7iVkZvypH1PiERARpfw_soBn8aIgZRRlrxL3w&_nc_zt=24&_nc_ht=scontent.fmnl45-2.fna&_nc_gid=TxUfCJQlDvZNbLinyjHWyw&oh=00_AffEhFI3qbEA_nFvxnJSebG6-_C6EmYcxiAghzDzRjzPBQ&oe=6900DBD1" class="rounded-circle mb-2" alt="Team Member 2">
               <h5>Maria Jobel</h5>
               <p class="text-muted">Head of Operations</p>
             </div>
             <div class="col-md-4 text-center mb-4">
-              <img src="https://picsum.photos/120/120?person3" class="rounded-circle mb-2" alt="Team Member 3">
+              <img src="https://scontent.fmnl45-2.fna.fbcdn.net/v/t39.30808-1/545586364_122140666826870248_9067851434944872428_n.jpg?stp=dst-jpg_s100x100_tt6&_nc_cat=109&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeGhCpsVGaojRDq5s4jJfkEE5NGt7PJ3zqnk0a3s8nfOqeEC2K3UNszj4nsDkSVOMsRCyhFzIdWjn0lFEcC1gXQZ&_nc_ohc=0oJv0MYiaYMQ7kNvwFNLnZE&_nc_oc=AdnBF8g1hyqY0rAmOu2lxmQbnm0ubhDoBwaAoaJa-f4-gjga7c5U_7w83Yjfa60_ovI&_nc_ad=z-m&_nc_cid=0&_nc_zt=24&_nc_ht=scontent.fmnl45-2.fna&_nc_gid=hhY6x-4OkOWLpVNKRJP_DQ&oh=00_AfcQtFlcgdQ1AdhmyS1U77rQPdj1taYmxEAHEvOtq772rw&oe=6900A605" class="rounded-circle mb-2" alt="Team Member 3">
               <h5>Jai Jemira</h5>
               <p class="text-muted">Customer Success</p>
             </div>

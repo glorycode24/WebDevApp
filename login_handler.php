@@ -2,18 +2,23 @@
 // CRITICAL: Always start a session before setting session variables
 session_start();
 
-// Database Configuration (Ensure these match your store_data.php)
-$servername = "localhost:3306";
-$username = "root"; 
-$password = "Asdasfssdafsadfadas123!";     
-$dbname = "webappdata";
+include_once 'includes/utils.php';
+// --- CRITICAL: Call the get_db_connection function to establish $conn ---
+$conn = get_db_connection();
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    http_response_code(500);
-    die("Database connection failed: " . $conn->connect_error);
+// Check if $conn was successfully established
+if ($conn === null) { // get_db_connection returns null on failure
+    ob_clean(); // Clean any buffered output before sending error JSON
+    http_response_code(500); // Internal Server Error
+    die(json_encode([
+        "success" => false,
+        "message" => "Database connection failed." // Error already logged by get_db_connection
+    ]));
 }
+
+// Ensure character set is set for the connection
+$conn->set_charset("utf8mb4");
+
 
 // 1. Get and sanitize input
 $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);

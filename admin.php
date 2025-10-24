@@ -13,7 +13,13 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'admin') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-    
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+
+    <script src="admin_script.js"></script> 
 <head>
 
     <meta charset="UTF-8">
@@ -120,12 +126,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'admin') {
     </div>
 </div>
         </div>
-    <script src="node_modules/jquery/dist/jquery.min.js"></script>
-
-    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script type="text/javascript" src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
-
-    <script src="admin_script.js"></script> 
+    
 </body>
 </html>

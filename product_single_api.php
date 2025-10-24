@@ -16,9 +16,10 @@ if ($conn->connect_error) {
 }
 
 // 2. Admin/Security Check (Optional but recommended)
-if (!isset($_SESSION['logged_in']) || $_SESSION['user_id'] != 2) { 
-    header('Content-Type: application/json');
-    die(json_encode(["error" => "Access Denied"]));
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    http_response_code(403); // Forbidden
+    echo json_encode(['error' => 'Access denied. Admin privileges required.']);
+    exit;
 }
 
 // 3. Get the Product ID from the URL query string

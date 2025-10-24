@@ -1,3 +1,15 @@
+<?php
+// --- CRITICAL: Start the session at the very beginning ---
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+include_once 'includes/utils.php';
+$current_user_name = $_SESSION['user_name'] ?? 'Guest';
+$cart_item_count = get_cart_item_count(); // Calculate the count for display
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,24 +34,56 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="bootstrap.html">Shine</a>
+      <a class="navbar-brand" href="bootstrap.php">Shine</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
-          <li class="nav-item"><a class="nav-link active" href="Contact.php">Contact</a></li>
-          <li class="nav-item"><a class="nav-link" href="Cart.php">🛒 Cart</a></li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="fas fa-sign-in-alt me-1"></i>Log In
-            </button>
-          </li>
-        </ul>
-      </div>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="bootstrap.php">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="Contact.php">Contact</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <!-- CART LINK WITH DYNAMIC COUNT -->
+                    <li class="nav-item">
+  <a class="nav-link position-relative" href="Cart.php">
+    <i class="fas fa-shopping-cart"></i> Cart
+    <!-- Dynamic Cart Count Badge -->
+    <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">
+      <?php echo $cart_item_count; ?>
+    </span>
+  </a>
+</li>
+                    
+                    <!-- DYNAMIC AUTH SECTION -->
+                    <?php if (is_user_logged_in()): ?>
+            <!-- Logged In User Links -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="logout_handler.php">Logout</a></li>
+              </ul>
+            </li>
+          <?php else: ?>
+            <!-- Guest Links -->
+            <li class="nav-item">
+              <!-- data-bs-toggle and data-bs-target are used by Bootstrap to open the modal -->
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">
+                <i class="fas fa-user-plus"></i> Register
+              </a>
+            </li>
+          <?php endif; ?>
+                </ul>
+            </div>
     </div>
   </nav>
 
@@ -277,6 +321,68 @@
             $formCheck.find('label').toggleClass('is-invalid-label', isInvalid); // Optional: add class to label
         }
       };
+
+      // Contact Form Validation
+      $("#contactForm").validate({
+        rules: {
+          name: {
+            required: true,
+            notWhitespaces: true,
+            nameCharacters: true
+          },
+          email: {
+            required: true,
+            email: true
+          },
+          message: {
+            required: true,
+            notWhitespaces: true,
+            minlength: 10 // Example: require a minimum message length
+          }
+        },
+        messages: {
+          name: {
+            required: "Please enter your name",
+            notWhitespaces: "Name cannot be empty",
+            nameCharacters: "Please enter a valid name."
+          },
+          email: {
+            required: "Please enter your email address",
+            email: "Please enter a valid email address"
+          },
+          message: {
+            required: "Please enter your message",
+            notWhitespaces: "Message cannot be empty",
+            minlength: "Message must be at least 10 characters long"
+          }
+        },
+        errorElement: 'div',
+        errorClass: 'error invalid-feedback',
+        highlight: function(element, errorClass, validClass) {
+            applyBootstrapInvalid(element, true);
+        },
+        unhighlight: function(element, errorClass, validClass) {
+            applyBootstrapInvalid(element, false);
+        },
+        errorPlacement: function(error, element) {
+            if (element.parent('.input-group').length) {
+              error.insertAfter(element.parent()); 
+            } else {
+              error.insertAfter(element);
+          }
+        },
+        submitHandler: function(form) {
+          console.log("Contact form submitted successfully!");
+          
+          // Show the success modal instead of alert
+          const contactSuccessModal = new bootstrap.Modal(document.getElementById("contactSuccessModal"));
+          contactSuccessModal.show();
+
+          form.reset();
+          $('#contactForm').find('.is-invalid').removeClass('is-invalid');
+          $('#contactForm').find('.error').remove();
+        }
+      });
 
       $("#loginForm").validate({
         rules: {
