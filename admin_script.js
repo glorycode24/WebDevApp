@@ -53,6 +53,7 @@ var userTable = $('#userTable').DataTable({
         { "data": "actions" }
     ]
 });
+   
     var userRoleModal = new bootstrap.Modal(document.getElementById('userRoleModal'));
     // 2. INITIALIZE THE BOOTSTRAP MODAL
     // NOTE: This must be done AFTER the table, but BEFORE any handlers use it.

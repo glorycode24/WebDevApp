@@ -10,9 +10,10 @@ $dbname = "webappdata";
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Security check
-if (!isset($_SESSION['logged_in']) || $_SESSION['user_id'] != 2) { 
-    header('Content-Type: application/json');
-    die(json_encode(["error" => "Access Denied"]));
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    http_response_code(403); // Forbidden
+    echo json_encode(['error' => 'Access denied. Admin privileges required.']);
+    exit;
 }
 
 $user_id = $_GET['id'] ?? null;
