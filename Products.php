@@ -56,41 +56,40 @@
     <div class="container">
       <h2 class="text-center mb-4">Shop All Products</h2>
       <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product1" class="card-img-top" alt="Elegant Chair">
-            <div class="card-body">
-              <h5 class="card-title">Elegant Chair</h5>
-              <p class="card-text">Comfortable and stylish for any space.</p>
-              <p class="card-text fw-bold">$99.00</p>
-              <a href="#" class="btn btn-primary w-100">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product2" class="card-img-top" alt="Smart Lamp">
-            <div class="card-body">
-              <h5 class="card-title">Smart Lamp</h5>
-              <p class="card-text">Modern lighting with smart features.</p>
-              <p class="card-text fw-bold">$49.00</p>
-              <a href="#" class="btn btn-primary w-100">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product3" class="card-img-top" alt="Modern Desk">
-            <div class="card-body">
-              <h5 class="card-title">Modern Desk</h5>
-              <p class="card-text">Spacious and sleek for productivity.</p>
-              <p class="card-text fw-bold">$199.00</p>
-              <a href="#" class="btn btn-primary w-100">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <!-- Add more products as needed -->
-      </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="https://picsum.photos/300/200?product1" class="card-img-top" alt="Product 1">
+            <div class="card-body">
+              <h5 class="card-title">Elegant Chair</h5>
+              <p class="card-text">$99.00</p>
+              <!-- MODIFIED: Added class and data-product-id="1" -->
+              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="1">Add to Cart</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="https://picsum.photos/300/200?product2" class="card-img-top" alt="Product 2">
+            <div class="card-body">
+              <h5 class="card-title">Smart Lamp</h5>
+              <p class="card-text">$49.00</p>
+              <!-- MODIFIED: Added class and data-product-id="2" -->
+              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="2">Add to Cart</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="https://picsum.photos/300/200?product3" class="card-img-top" alt="Product 3">
+            <div class="card-body">
+              <h5 class="card-title">Modern Desk</h5>
+              <p class="card-text">$199.00</p>
+              <!-- MODIFIED: Added class and data-product-id="3" -->
+              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="3">Add to Cart</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -502,6 +501,58 @@
         }
       });
       
+      $(document).on('click', '.add-to-cart-btn', function() {
+        // Get the product ID from the button's data attribute
+        var productId = $(this).data('product-id');
+        
+        // You might want to get quantity from an input field if you have one, 
+        // but we default to 1 for a simple "Add to Cart" button.
+        var quantity = 1; 
+
+        if (!productId) {
+            alert("Error: Missing product information.");
+            return;
+        }
+
+        // Disable button and show loading state
+        var $button = $(this);
+        $button.prop('disabled', true).text('Adding...');
+
+        $.ajax({
+            url: 'cart_action.php?action=add',
+            type: 'POST',
+            dataType: 'json',
+            data: { 
+                product_id: productId, 
+                quantity: quantity 
+            },
+            success: function(response) {
+                // Use a custom modal or message box instead of alert() in production
+                if (response.success) {
+                    alert("Success! " + response.message);
+                    
+                    // TODO: Update the cart count icon in the header here!
+                    // updateCartCount(response.total_items); 
+                } else {
+                    alert("Cart Error: " + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                // If the user isn't logged in, the server returns 401
+                if (xhr.status === 401) {
+                    alert("Error: " + xhr.responseJSON.message);
+                } else {
+                    alert("An unknown error occurred while adding to cart.");
+                    console.error("AJAX Error:", error);
+                }
+            },
+            complete: function() {
+                // Re-enable button
+                $button.prop('disabled', false).text('Add to Cart');
+            }
+        });
+    });
+
     });
     </script>
     

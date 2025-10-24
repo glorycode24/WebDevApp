@@ -18,7 +18,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'admin') {
 
     <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    <a href="logout.php" class="btn btn-danger float-end">Log Out</a>
+    <a href="admin_logout.php" class="btn btn-danger float-end">Log Out</a>
 
     <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     

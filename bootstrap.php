@@ -1,3 +1,22 @@
+<?php
+// --- CRITICAL: Start the session at the very beginning ---
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// --- Auth Check Helper ---
+
+/**
+ * Checks if a user is currently authenticated.
+ * IMPORTANT: Adjust 'user_id' to match the key you use in $_SESSION 
+ * when a user successfully logs in (e.g., 'username', 'is_authenticated').
+ */
+function is_user_logged_in() {
+    // We check if the session variable exists and is not empty
+    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+$current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,19 +47,44 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link active" href="bootstrap.php">Home</a></li>
-          <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
-          <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
-          <li class="nav-item"><a class="nav-link" href="Cart.php">🛒 Cart</a></li>
-          <li class="nav-item">
-            <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-              <i class="fas fa-sign-in-alt me-1"></i>Log In
-            </button>
-          </li>
-        </ul>
-      </div>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link active" href="bootstrap.php">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Products.php">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="About.php">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Contact.php">Contact</a></li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <!-- CART LINK WITH DYNAMIC COUNT -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="Cart.php" id="cartLink">
+                            🛒 Cart 
+                            <span id="cartCount" class="badge bg-primary rounded-pill d-none">0</span>
+                        </a>
+                    </li>
+                    
+                    <!-- DYNAMIC AUTH SECTION -->
+                    <?php if (is_user_logged_in()): ?>
+                        <!-- LOGGED IN VIEW -->
+                        <li class="nav-item">
+                            <span class="nav-link text-white-50">
+                                <i class="fas fa-user me-1"></i>Hello, <?php echo htmlspecialchars($current_user_id); ?>!
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light ms-2" href="logout_handler.php">
+                                <i class="fas fa-sign-out-alt me-1"></i>Log Out
+                            </a>
+                        </li>
+                    <?php else: ?>
+                        <!-- LOGGED OUT VIEW -->
+                        <li class="nav-item">
+                            <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                <i class="fas fa-sign-in-alt me-1"></i>Log In
+                            </button>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
     </div>
   </nav>
 
@@ -57,37 +101,40 @@
     <div class="container">
       <h2 class="text-center mb-4">Featured Products</h2>
       <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product1" class="card-img-top" alt="Product 1">
-            <div class="card-body">
-              <h5 class="card-title">Elegant Chair</h5>
-              <p class="card-text">$99.00</p>
-              <a href="#" class="btn btn-primary w-100">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product2" class="card-img-top" alt="Product 2">
-            <div class="card-body">
-              <h5 class="card-title">Smart Lamp</h5>
-              <p class="card-text">$49.00</p>
-              <a href="#" class="btn btn-primary w-100">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card h-100">
-            <img src="https://picsum.photos/300/200?product3" class="card-img-top" alt="Product 3">
-            <div class="card-body">
-              <h5 class="card-title">Modern Desk</h5>
-              <p class="card-text">$199.00</p>
-              <a href="#" class="btn btn-primary w-100">Add to Cart</a>
-            </div>
-          </div>
-        </div>
-      </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="https://picsum.photos/300/200?product1" class="card-img-top" alt="Product 1">
+            <div class="card-body">
+              <h5 class="card-title">Elegant Chair</h5>
+              <p class="card-text">$99.00</p>
+              <!-- MODIFIED: Added class and data-product-id="1" -->
+              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="1">Add to Cart</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="https://picsum.photos/300/200?product2" class="card-img-top" alt="Product 2">
+            <div class="card-body">
+              <h5 class="card-title">Smart Lamp</h5>
+              <p class="card-text">$49.00</p>
+              <!-- MODIFIED: Added class and data-product-id="2" -->
+              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="2">Add to Cart</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <img src="https://picsum.photos/300/200?product3" class="card-img-top" alt="Product 3">
+            <div class="card-body">
+              <h5 class="card-title">Modern Desk</h5>
+              <p class="card-text">$199.00</p>
+              <!-- MODIFIED: Added class and data-product-id="3" -->
+              <a href="#" class="btn btn-primary w-100 add-to-cart-btn" data-product-id="3">Add to Cart</a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -498,6 +545,58 @@
             return false;
         }
       });
+
+        $(document).on('click', '.add-to-cart-btn', function() {
+        // Get the product ID from the button's data attribute
+        var productId = $(this).data('product-id');
+        
+        // You might want to get quantity from an input field if you have one, 
+        // but we default to 1 for a simple "Add to Cart" button.
+        var quantity = 1; 
+
+        if (!productId) {
+            alert("Error: Missing product information.");
+            return;
+        }
+
+        // Disable button and show loading state
+        var $button = $(this);
+        $button.prop('disabled', true).text('Adding...');
+
+        $.ajax({
+            url: 'cart_action.php?action=add',
+            type: 'POST',
+            dataType: 'json',
+            data: { 
+                product_id: productId, 
+                quantity: quantity 
+            },
+            success: function(response) {
+                // Use a custom modal or message box instead of alert() in production
+                if (response.success) {
+                    alert("Success! " + response.message);
+                    
+                    // TODO: Update the cart count icon in the header here!
+                    // updateCartCount(response.total_items); 
+                } else {
+                    alert("Cart Error: " + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                // If the user isn't logged in, the server returns 401
+                if (xhr.status === 401) {
+                    alert("Error: " + xhr.responseJSON.message);
+                } else {
+                    alert("An unknown error occurred while adding to cart.");
+                    console.error("AJAX Error:", error);
+                }
+            },
+            complete: function() {
+                // Re-enable button
+                $button.prop('disabled', false).text('Add to Cart');
+            }
+        });
+    });
       
     });
     </script>

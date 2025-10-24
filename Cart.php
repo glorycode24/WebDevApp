@@ -63,7 +63,7 @@
               </div>
               <h2 class="card-title mb-3">Your cart is empty</h2>
               <p class="card-text text-muted mb-4">Looks like you haven't added any items to your cart yet. Start shopping to fill it up!</p>
-              <a href="Products.html" class="btn btn-primary btn-lg">Continue Shopping</a>
+              <a href="Products.php" class="btn btn-primary btn-lg">Continue Shopping</a>
             </div>
           </div>
         </div>
