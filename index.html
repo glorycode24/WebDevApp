@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AJAX Data Submission</title>
+</head>
+<body>
+
+    <h2>User Registration</h2>
+    <form id="dataForm">
+    <label for="first_name">First Name</label>
+    <input type="text" id="first_name" name="first_name" required><br><br>
+
+    <label for="last_name">Last Name</label>
+    <input type="text" id="last_name" name="last_name" required><br><br>
+
+    <label for="email">Email address</label>
+    <input type="email" id="email" name="email" required><br><br>
+
+    <label for="home_address">Home Address</label>
+    <textarea id="home_address" name="home_address"></textarea><br><br>
+
+    <label for="contact_number">Contact Number</label>
+    <input type="text" id="contact_number" name="contact_number"><br><br>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <label for="confirm_password">Confirm Password</label>
+    <input type="password" id="confirm_password" name="confirm_password" required><br><br>
+
+    <input type="checkbox" id="terms" name="terms" required>
+    <label for="terms">I agree to the Terms and Conditions</label><br><br>
+
+    <button type="submit" class="btn btn-primary">Sign Up</button>
+</form>
+
+<p id="message"></p>
+
+    <script>
+        document.getElementById('dataForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop the form from submitting normally
+
+            const first_name = document.getElementById('first_name').value;
+    const last_name = document.getElementById('last_name').value;
+    const email = document.getElementById('email').value;
+    const home_address = document.getElementById('home_address').value;
+    const contact_number = document.getElementById('contact_number').value;
+    const password = document.getElementById('password').value;
+    const confirm_password = document.getElementById('confirm_password').value;
+
+    const messageDisplay = document.getElementById('message');
+
+    // ** Client-Side Validation: Check if passwords match **
+    if (password !== confirm_password) {
+        messageDisplay.style.color = 'red';
+        messageDisplay.textContent = 'Passwords do not match!';
+        return; // Stop the AJAX submission
+    }
+            // 2. Create FormData object with ALL fields
+              const formData = new FormData();
+             formData.append('first_name', first_name);
+             formData.append('last_name', last_name);
+              formData.append('email', email);
+              formData.append('home_address', home_address);
+             formData.append('contact_number', contact_number);
+             formData.append('password', password); // Send the plain password to PHP for HASHING
+
+            // 2. AJAX Request using Fetch API (modern AJAX)
+            fetch('store_data.php', {
+                method: 'POST',
+                body: formData // The data to send to the server
+            })
+            .then(response => response.text())
+            .then(data => {
+                // 3. Handle the server's response
+                if (data.trim() === 'success') {
+                    messageDisplay.style.color = 'green';
+                    messageDisplay.textContent = 'Signed up successfully! 🎉';
+                    document.getElementById('dataForm').reset(); // Clear the form
+                } else {
+                    messageDisplay.style.color = 'red';
+                    messageDisplay.textContent = 'Error saving data: ' + data;
+                }
+            })
+            .catch(error => {
+                // Handle network or other errors
+                messageDisplay.style.color = 'red';
+                messageDisplay.textContent = 'Network error: ' + error;
+            });
+        });
+    </script>
+
+</body>
+</html>
