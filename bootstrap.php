@@ -68,7 +68,7 @@ $current_user_id = $_SESSION['user_id'] ?? 'Guest';?>
             <!-- Logged In User Links -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>
+                Welcome, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <li><a class="dropdown-item" href="logout_handler.php">Logout</a></li>
